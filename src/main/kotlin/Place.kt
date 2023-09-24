@@ -1,1 +1,1 @@
-data class Place(override var name: String, var parent: Place, var items: Array<Thing>): Thing(name)
+data class Place(override var name: String, var parent: Place? = null, var items: Array<Thing>? = null): Thing(name)
