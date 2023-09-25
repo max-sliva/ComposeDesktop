@@ -17,12 +17,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.toLowerCase
+import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import java.util.*
 
 @Composable
 @Preview
@@ -37,6 +40,7 @@ fun App() {
     var arrayOfNames = dataHolder.getItemNames()
     var namesList = arrayOfNames.toMutableList()
     val textStyle = TextStyle(fontSize = 20.sp)
+    var isVisible by remember { mutableStateOf(false) }
     MaterialTheme {
         Column(
             modifier = Modifier.fillMaxSize(), //заполняем всё доступное пространство
@@ -50,7 +54,20 @@ fun App() {
                     value = searchValue, //связываем текст из поля с созданным ранее объектом
                     onValueChange = { newText -> //обработчик ввода значений в поле
                         searchValue = newText //все изменения сохраняем в наш объект
-                        namesList.forEach { print("$it ") }
+//                        namesList.forEach { print("$it ") }
+                        if (newText.length>=3) {
+                            namesList.clear()
+                            isVisible = true
+                            arrayOfNames.forEach {
+                                var accept = false
+                                it.split(" ").forEach { word->
+                                    if (word.lowercase(Locale.getDefault()).startsWith(newText.lowercase())) accept = true
+                                    //todo add check for several words
+                                }
+                                if (accept) namesList.add(it)
+                            }
+                        } else isVisible = false
+
                     },
                     textStyle = TextStyle( //объект для изменения стиля текста
                         fontSize = 14.sp //увеличиваем шрифт
@@ -65,7 +82,7 @@ fun App() {
                     Text(text)
                 }
             }
-            LazyRow() {
+            if (isVisible) LazyRow() {
                 items(namesList) { name ->
                     Text(
                         text = name,
@@ -74,6 +91,7 @@ fun App() {
                             .clickable(onClick = {
                                 searchValue = name
                             })
+                            //todo add border
                     )
                 }
             }
