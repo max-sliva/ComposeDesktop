@@ -2,11 +2,23 @@
  * Class for returning data either from local or network storage
  */
 class DataHolder {
-    var things: Array<Thing>? = arrayOf(Place("backShelf"), Place("centerTables"))
+    var things: Array<Thing>? = arrayOf(
+        Place(StorageName.BOOK_SHELF), Place(StorageName.CENTER_TABLES), Item("Arduino uno", Place(StorageName.CENTER_TABLES)),
+        Item("Arduino Yun", Place(StorageName.BOOK_SHELF))
+    )
 
     fun getData(): Array<Thing>? {
 
-
         return things
+    }
+
+    fun getItemNames(): Array<String> {
+        var itemNames = arrayOf<String>()
+        for (item in things!!){
+            if (item is Item) {
+                itemNames = itemNames.plus(item.name)
+            }
+        }
+        return itemNames
     }
 }
