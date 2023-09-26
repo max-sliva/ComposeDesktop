@@ -1,5 +1,7 @@
 import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,11 +16,11 @@ import androidx.compose.material.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.toLowerCase
-import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
@@ -27,6 +29,22 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import java.util.*
 
+fun searchItem(
+    things: Array<Thing>?,
+    searchValue: String,
+    storageNameToPngHashMap: HashMap<StorageName, String>
+): String {
+    var imageSrc = ""
+    things!!.forEach {
+        if (it is Item && it.name.lowercase(Locale.getDefault()) == searchValue.lowercase(Locale.getDefault())) {
+            imageSrc = storageNameToPngHashMap[it.place.name].toString()
+            //                            println("${storageNameToPngHashMap[it.place.name]}")
+
+        }
+    }
+    return imageSrc
+}
+
 @Composable
 @Preview
 fun App() {
@@ -34,6 +52,10 @@ fun App() {
     var searchValue by remember { //объект для работы с текстом, для TextField
         mutableStateOf("") //его начальное значение
     }
+    var storageNameToPngHashMap = HashMap<StorageName, String>()
+    //BACK_SHELF, CENTER_TABLES, TABLE_AT_DOOR, CUSTOM_PLACE
+    storageNameToPngHashMap[StorageName.BACK_SHELF] = "206_backShelf.png"
+    storageNameToPngHashMap[StorageName.CENTER_TABLES] = "206_center.png"
     var imageSrc by remember { mutableStateOf("206.png") }
     val dataHolder = DataHolder()
     val things = dataHolder.getData()
@@ -47,20 +69,18 @@ fun App() {
             horizontalAlignment = Alignment.CenterHorizontally, //по центру горизонтально
 //            verticalArrangement = Arrangement.Center //и вертикально
         ) { // вертикальная колонка для размещения объектов
-            Row(
-
-            ) {
+            Row() {
                 TextField(
                     value = searchValue, //связываем текст из поля с созданным ранее объектом
                     onValueChange = { newText -> //обработчик ввода значений в поле
                         searchValue = newText //все изменения сохраняем в наш объект
 //                        namesList.forEach { print("$it ") }
-                        if (newText.length>=3) {
+                        if (newText.length >= 3) {
                             namesList.clear()
                             isVisible = true
                             arrayOfNames.forEach {
                                 var accept = false
-                                it.split(" ").forEach { word->
+                                it.split(" ").forEach { word ->
                                     if (word.lowercase(Locale.getDefault()).startsWith(newText.lowercase())) accept = true
                                     //todo add check for several words
                                 }
@@ -72,12 +92,11 @@ fun App() {
                     textStyle = TextStyle( //объект для изменения стиля текста
                         fontSize = 14.sp //увеличиваем шрифт
                     ),
-                    //todo make showing choice for autoinput
                     placeholder = { Text(text = "Введите текст для поиска") }
                 )
                 Button(onClick = {
-                    //todo search in db and show on image or popup window with notification
-                    imageSrc = "206_back.png"
+                    //todo add popup window with notification if no item found
+                    imageSrc = searchItem(things, searchValue, storageNameToPngHashMap)
                 }) {
                     Text(text)
                 }
@@ -90,8 +109,10 @@ fun App() {
                             .padding(4.dp)
                             .clickable(onClick = {
                                 searchValue = name
+                                imageSrc = searchItem(things, searchValue, storageNameToPngHashMap)
                             })
-                            //todo add border
+                            .border(BorderStroke(2.dp, Color.Gray))
+                            .padding(4.dp)
                     )
                 }
             }
@@ -101,18 +122,18 @@ fun App() {
                 contentScale = ContentScale.Fit
             )
         }
-
     }
 }
 
-fun main() = application {
-    val windowState = rememberWindowState(
-        position = WindowPosition(Alignment.Center)
-    )
-    Window(
-        state = windowState,
-        onCloseRequest = ::exitApplication
-    ) {
-        App()
+
+    fun main() = application {
+        val windowState = rememberWindowState(
+            position = WindowPosition(Alignment.Center)
+        )
+        Window(
+            state = windowState,
+            onCloseRequest = ::exitApplication
+        ) {
+            App()
+        }
     }
-}
