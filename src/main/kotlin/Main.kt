@@ -9,10 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
@@ -29,22 +25,22 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import java.util.*
 
-fun searchItem(
+fun searchItem( //возвращает нужную картинку для искомого предмета
     things: Array<Thing>?,
     searchValue: String,
     storageNameToPngHashMap: HashMap<StorageName, String>
 ): String {
-    var imageSrc = ""
+    var imageSrc = "206.png" //дефолтная картинка
     things!!.forEach {
         if (it is Item && it.name.lowercase(Locale.getDefault()) == searchValue.lowercase(Locale.getDefault())) {
             imageSrc = storageNameToPngHashMap[it.place.name].toString()
             //                            println("${storageNameToPngHashMap[it.place.name]}")
-
         }
     }
     return imageSrc
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 @Preview
 fun App() {
@@ -61,8 +57,19 @@ fun App() {
     val things = dataHolder.getData()
     var arrayOfNames = dataHolder.getItemNames()
     var namesList = arrayOfNames.toMutableList()
+    namesList.clear()
     val textStyle = TextStyle(fontSize = 20.sp)
-    var isVisible by remember { mutableStateOf(false) }
+    var isLazyRowVisible by remember { mutableStateOf(false) }
+    var openDialog by remember { mutableStateOf(false)}
+    if (openDialog)
+        AlertDialog( // создаем AlertDialog
+            onDismissRequest = { openDialog=false },//действия при закрытии окна
+            text = { Text(text = "Нет такого", fontSize = 20.sp) },//содержимое окна
+            confirmButton = { //кнопка Ok, которая будет закрывать окно
+                Button(onClick = { openDialog=false })
+                { Text(text = "OK") }
+            }
+        )
     MaterialTheme {
         Column(
             modifier = Modifier.fillMaxSize(), //заполняем всё доступное пространство
@@ -75,19 +82,19 @@ fun App() {
                     onValueChange = { newText -> //обработчик ввода значений в поле
                         searchValue = newText //все изменения сохраняем в наш объект
 //                        namesList.forEach { print("$it ") }
-                        if (newText.length >= 3) {
+                        if (newText.length >= 3) { //если в поиске >3 букв
                             namesList.clear()
-                            isVisible = true
                             arrayOfNames.forEach {
                                 var accept = false
                                 it.split(" ").forEach { word ->
-                                    if (word.lowercase(Locale.getDefault()).startsWith(newText.lowercase())) accept = true
+                                    if (word.lowercase(Locale.getDefault()).startsWith(newText.lowercase())) accept =
+                                        true
                                     //todo add check for several words
                                 }
                                 if (accept) namesList.add(it)
                             }
-                        } else isVisible = false
-
+                        } else isLazyRowVisible = false
+                        if (namesList.isNotEmpty()) isLazyRowVisible = true
                     },
                     textStyle = TextStyle( //объект для изменения стиля текста
                         fontSize = 14.sp //увеличиваем шрифт
@@ -95,13 +102,15 @@ fun App() {
                     placeholder = { Text(text = "Введите текст для поиска") }
                 )
                 Button(onClick = {
-                    //todo add popup window with notification if no item found
                     imageSrc = searchItem(things, searchValue, storageNameToPngHashMap)
+                    namesList.clear()
+//                    println("item = $item")
+                    if (imageSrc == "206.png") openDialog = true
                 }) {
                     Text(text)
                 }
             }
-            if (isVisible) LazyRow() {
+            if (isLazyRowVisible) LazyRow() {
                 items(namesList) { name ->
                     Text(
                         text = name,
@@ -110,6 +119,7 @@ fun App() {
                             .clickable(onClick = {
                                 searchValue = name
                                 imageSrc = searchItem(things, searchValue, storageNameToPngHashMap)
+                                namesList.clear()
                             })
                             .border(BorderStroke(2.dp, Color.Gray))
                             .padding(4.dp)
@@ -126,14 +136,14 @@ fun App() {
 }
 
 
-    fun main() = application {
-        val windowState = rememberWindowState(
-            position = WindowPosition(Alignment.Center)
-        )
-        Window(
-            state = windowState,
-            onCloseRequest = ::exitApplication
-        ) {
-            App()
-        }
+fun main() = application {
+    val windowState = rememberWindowState(
+        position = WindowPosition(Alignment.Center)
+    )
+    Window(
+        state = windowState,
+        onCloseRequest = ::exitApplication
+    ) {
+        App()
     }
+}
