@@ -62,7 +62,7 @@ fun App() {
     var isLazyRowVisible by remember { mutableStateOf(false) }
     var openDialog by remember { mutableStateOf(false)}
     if (openDialog)
-        AlertDialog( // создаем AlertDialog
+        AlertDialog( // для показа сообщения о ненайденном объекте
             onDismissRequest = { openDialog=false },//действия при закрытии окна
             text = { Text(text = "Нет такого", fontSize = 20.sp) },//содержимое окна
             confirmButton = { //кнопка Ok, которая будет закрывать окно

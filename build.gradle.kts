@@ -21,7 +21,8 @@ dependencies {
     // With compose.desktop.common you will also lose @Preview functionality
     implementation(compose.desktop.currentOs)
 }
-
+//to make exe run in terminal:
+// ./gradlew runDistributable
 compose.desktop {
     application {
         mainClass = "MainKt"
